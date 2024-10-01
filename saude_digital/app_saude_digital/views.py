@@ -138,6 +138,17 @@ def busca_corretor(request):
         return JsonResponse({'error': 'Metodo nao permitido. Use GET.'}, status=405)
     
 
-# def busca_plano(request):
+def busca_endereco(request):
+    if request.method == 'GET':
+        # Obtem o nome da requisicao
+        endereco = request.GET.get('endereco', '')  
 
+        # Busca com ilike os corretores que possuem aquele nome
+        corretores = Corretor.objects.filter(endereco__icontains=endereco)
 
+        corretores_list = list(corretores.values())  # Converte para uma lista de dicionarios
+
+        # Retorna a resposta JSON
+        return JsonResponse({'corretores': corretores_list}, safe=False)
+    else:
+        return JsonResponse({'error': 'Metodo nao permitido. Use GET.'}, status=405)
