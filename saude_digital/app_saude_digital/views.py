@@ -1,6 +1,6 @@
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from .models import Cliente, Corretor
 import json
 
@@ -137,6 +137,30 @@ def busca_corretor(request):
     else:
         return JsonResponse({'error': 'Metodo nao permitido. Use GET.'}, status=405)
     
+
+def busca_corretor_id(request):
+    if request.method == 'GET':
+        # Obtem o id da requisicao
+        id = request.GET.get('id', '')
+        # Busca o corretor pelo ID
+        corretor = get_object_or_404(Corretor, id=id)
+
+        # Converte o objeto do corretor para dicionário
+        corretor_data = {
+            'id': corretor.id,
+            'nome': corretor.nome,
+            'cpf': corretor.cpf,
+            'endereco': corretor.endereco,
+            'telefone': corretor.telefone,
+            'email': corretor.email,
+            'registro_plano': corretor.registro_plano
+        }
+
+        # Retorna a resposta JSON
+        return JsonResponse({'corretor': corretor_data}, status=200)
+    else:
+        return JsonResponse({'error': 'Metodo nao permitido. Use GET.'}, status=405)
+
 
 def busca_endereco(request):
     if request.method == 'GET':
