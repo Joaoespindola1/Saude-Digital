@@ -17,7 +17,7 @@ class Corretor(models.Model):
     endereco = models.CharField(max_length=255)
     telefone = models.CharField(max_length=15, blank=True, null=True)
     email = models.EmailField(max_length=255)
-    registro_susep = models.CharField(max_length=20, unique=True)
+    registro_plano = models.CharField(max_length=20, unique=True)
 
     def __str__(self):
         return self.nome
