@@ -17,7 +17,7 @@ class Corretor(models.Model):
     endereco = models.CharField(max_length=255)
     telefone = models.CharField(max_length=15, blank=True, null=True)
     email = models.EmailField(max_length=255)
-    registro_registro = models.CharField(max_length=20, unique=True)
+    registro_susep = models.CharField(max_length=20, unique=True)
 
     def __str__(self):
         return self.nome
@@ -39,7 +39,17 @@ class ClienteCorretor(models.Model):
     status_associacao = models.CharField(max_length=20, blank=True, null=True)
 
     class Meta:
-        unique_together = (('cliente', 'corretor'),)
+        unique_together = ('cliente', 'corretor')
 
     def __str__(self):
         return f"{self.cliente.nome} - {self.corretor.nome}"
+
+class FeedbackCliente(models.Model):
+    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
+    corretor = models.ForeignKey(Corretor, on_delete=models.CASCADE)
+    avaliacao = models.IntegerField()
+    comentario = models.TextField(blank=True, null=True)
+    data_feedback = models.DateField()
+
+    def __str__(self):
+        return f"Feedback de {self.cliente.nome} para {self.corretor.nome}"
