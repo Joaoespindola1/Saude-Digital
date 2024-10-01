@@ -1,4 +1,4 @@
-Passos para rodar o projeto.
+<h1>Passos para rodar o projeto</h1>
 
 1 - Banco postgres rodando na localhost com o nome 'saude_digital' usuario postgres e sem senha
 
