@@ -153,12 +153,15 @@ def busca_corretor_id(request):
         # Converte o objeto do corretor para dicionário
         corretor_data = {
             'id': corretor.id,
+            #'foto_perfil': corretor.foto_perfil,
             'nome': corretor.nome,
             'cpf': corretor.cpf,
             'endereco': corretor.endereco,
             'telefone': corretor.telefone,
             'email': corretor.email,
-            'codigo_corretor': corretor.codigo_corretor
+            'codigo_corretor': corretor.codigo_corretor,
+            'descricao': corretor.descricao,
+            'clientes_vinculados': corretor.clientes_vinculados
         }
 
         # Retorna a resposta JSON
