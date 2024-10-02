@@ -181,3 +181,40 @@ def busca_endereco(request):
         return JsonResponse({'corretores': corretores_list}, safe=False)
     else:
         return JsonResponse({'error': 'Metodo nao permitido. Use GET.'}, status=405)
+
+
+@csrf_exempt
+def login(request):
+    if request.method == 'POST':
+        try:
+            # Decodificando o JSON da requisição
+            data = json.loads(request.body)
+            email = data.get('email')
+            password = data.get('password')
+            tipo = data.get('tipo')
+
+            # Verificando se os campos obrigatórios foram fornecidos
+            if not email or not password or not tipo:
+                return JsonResponse({'error': 'E-mail, senha e tipo sao obrigatorios.'}, status=400)
+
+            # Login para Cliente (tipo = 1)
+            if tipo == 1:
+                user = Cliente.objects.filter(email=email, password=password).first()
+                print('aq')
+            # Login para Corretor (tipo = 2)
+            elif tipo == 2:
+                user = Corretor.objects.filter(email=email, password=password).first()
+            else:
+                return JsonResponse({'error': 'Tipo invalido.'}, status=400)
+
+            if user:
+                user_id = {
+                'id': user.id
+                }
+                return JsonResponse({'id': user_id}, status=200)
+            else:
+                return JsonResponse({'error': 'E-mail ou senha invalidos.'}, status=401)
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Dados JSON invalidos.'}, status=400)
+    else:
+        return JsonResponse({'error': 'Metodo nao permitido.'}, status=405)
