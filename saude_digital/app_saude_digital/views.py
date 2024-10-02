@@ -211,7 +211,7 @@ def login(request):
                 user_id = {
                 'id': user.id
                 }
-                return JsonResponse({'id': user_id}, status=200)
+                return JsonResponse(user_id, status=200)
             else:
                 return JsonResponse({'error': 'E-mail ou senha invalidos.'}, status=401)
         except json.JSONDecodeError:
