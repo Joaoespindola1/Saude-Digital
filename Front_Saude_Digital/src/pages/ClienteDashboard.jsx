@@ -3,12 +3,21 @@ import Button from '../components/Button';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
+import LogoutButton from "../components/LogoutButton";
+
 function ClienteDashboard() {
   const navigate = useNavigate();
   const [corretores, setCorretores] = useState([]);
   const [filteredCorretores, setFilteredCorretores] = useState([]);
   const [regioes, setRegioes] = useState([]);
   const [selectedRegiao, setSelectedRegiao] = useState('');
+
+  useEffect(() => {
+    const userId = localStorage.getItem("userId");
+    if (!userId) {
+      navigate("/login");
+    }
+  }, [navigate]);
 
   useEffect(() => {
     const fetchCorretores = async () => {
@@ -41,10 +50,6 @@ function ClienteDashboard() {
     }
   };
 
-  const handleLogout = () => {
-    navigate('/login');
-  };
-
   const handleMessages = () => {
     navigate('/messages');
   };
@@ -59,7 +64,7 @@ function ClienteDashboard() {
         <h1 className="text-bg_azul_escuro text-3xl font-bold">Saúde Digital</h1>
         <div className="flex space-x-4">
           <Button text="Mensagens" onClick={handleMessages} />
-          <Button text="Desconectar" onClick={handleLogout} />
+          <LogoutButton />
         </div>
       </header>
       <div className="flex">

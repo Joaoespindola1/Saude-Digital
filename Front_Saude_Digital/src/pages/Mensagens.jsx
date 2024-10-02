@@ -1,52 +1,49 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Button from '../components/Button'
+import LogoutButton from "../components/LogoutButton"
 
 const mockCorretores = [
   {
     id: 1,
-    nome: 'João Silva',
+    nome: 'Teste João Silva',
     fotoUrl: 'https://via.placeholder.com/150',
   },
   {
     id: 2,
-    nome: 'Ana Souza',
+    nome: 'Teste Ana Souza',
     fotoUrl: 'https://via.placeholder.com/150',
   },
 ]
 
 function Mensagens() {
-  const navigate = useNavigate();
-  const [mensagem, setMensagem] = useState('');
-  const [mensagens, setMensagens] = useState([]);
-  const [corretorSelecionado, setCorretorSelecionado] = useState(null);
+  const navigate = useNavigate()
+  const [mensagem, setMensagem] = useState('')
+  const [mensagens, setMensagens] = useState([])
+  const [corretorSelecionado, setCorretorSelecionado] = useState(null)
 
   const handleGoToHome = () => {
-    navigate('/cliente-dashboard');
+    navigate('/cliente-dashboard')
   };
-
-  const handleLogout = () => {
-    navigate('/login')
-  }
 
   const handleEnviar = () => {
     if (mensagem.trim() === "") {
-      alert("Por favor, digite uma mensagem.");
+      alert("Por favor, digite uma mensagem.")
     } else {
-      setMensagens([...mensagens, { remetente: 'Você', texto: mensagem }]);
-      setMensagem(''); 
+      setMensagens([...mensagens, { remetente: 'Você', texto: mensagem }])
+      setMensagem('');
     }
   };
 
   const handleKeyDown = (event) => {
     if (event.key === 'Enter') {
-      handleEnviar();
+      handleEnviar()
     }
-  };
+  }
 
   const handleCorretorSelecionado = (corretor) => {
-    setCorretorSelecionado(corretor);
-    setMensagens([]);
+    setCorretorSelecionado(corretor)
+    setMensagens([])
   };
 
   return (
@@ -55,7 +52,7 @@ function Mensagens() {
         <h1 className="text-bg_azul_escuro text-3xl font-bold">Saúde Digital</h1>
         <div className="flex space-x-4">
           <Button text="Página Principal" onClick={handleGoToHome} />
-          <Button text="Desconectar" onClick={handleLogout} />
+          <LogoutButton/>
         </div>
       </header>
 

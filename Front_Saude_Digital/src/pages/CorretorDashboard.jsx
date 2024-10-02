@@ -1,12 +1,27 @@
-/* eslint-disable react/prop-types */
-import React from "react";
+import { useEffect } from 'react';
 import { useNavigate } from "react-router-dom";
+
 
 function CorretorDashboard() {
   const navigate = useNavigate();
 
+  // Verifica o userId no localStorage para garantir que o usuário está logado
+  useEffect(() => {
+    const userId = localStorage.getItem("userId");
+    if (!userId) {
+      navigate("/login");
+    }
+  }, [navigate]);
+
+  // Função para ir para a página de edição de perfil, utilizando o userId dinâmico
   const handleGoToProfile = () => {
-    navigate("/corretor-perfil-edit/1");
+    const userId = localStorage.getItem("userId"); // Obtém o userId do localStorage
+    if (userId) {
+      navigate(`/corretor-perfil-edit/${userId}`); // Usa o userId na URL
+    } else {
+      alert("Erro ao encontrar o usuário. Faça login novamente.");
+      navigate("/login");
+    }
   };
 
   return (

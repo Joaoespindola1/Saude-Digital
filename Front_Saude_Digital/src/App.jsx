@@ -1,23 +1,22 @@
-/* eslint-disable react/prop-types */
-import React, { useState } from "react";
-import Input from "./components/Input";
-import { useNavigate } from "react-router-dom";
+import React, { useState } from "react"
+import Input from "./components/Input"
+import { useNavigate } from "react-router-dom"
 
 function App({ isLogin }) {
   const [email, setEmail] = useState("")
-  // const [password, setPassword] = useState("")
+  const [password, setPassword] = useState("")
   const [userType, setUserType] = useState("")
   const [cpf, setCpf] = useState("")
-  const [registro_plano, setregistro_plano] = useState("")
+  const [codigo_corretor, setcodigo_corretor] = useState("")
   const [nome, setNome] = useState("")
   const [endereco, setEndereco] = useState("")
   const [telefone, setTelefone] = useState("")
-  const navigate = useNavigate()
+  const [data_nascimento, setdata_nascimento] = useState("")
+  const navigate = useNavigate();
 
-  // Função para cadastrar Cliente
   const registerCliente = async () => {
     try {
-      const response = await fetch("http://localhost:5000/api/clientes", {
+      const response = await fetch("http://127.0.0.1:8000/cadastro_cliente/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -27,7 +26,9 @@ function App({ isLogin }) {
           cpf,
           endereco,
           telefone,
-          email
+          email,
+          password,
+          data_nascimento,
         }),
       });
 
@@ -41,7 +42,8 @@ function App({ isLogin }) {
     } catch (error) {
       console.error("Erro no envio dos dados", error);
     }
-  }
+  };
+
   const registerCorretor = async () => {
     try {
       const response = await fetch("http://127.0.0.1:8000/cadastro_corretor/", {
@@ -55,9 +57,10 @@ function App({ isLogin }) {
           endereco,
           telefone,
           email,
-          registro_plano,
+          codigo_corretor,
+          password,
         }),
-      });
+      })
 
       if (response.ok) {
         console.log("Corretor cadastrado com sucesso");
@@ -71,28 +74,54 @@ function App({ isLogin }) {
     }
   };
 
+  const handleLogin = async () => {
+    try {
+      const response = await fetch("http://127.0.0.1:8000/login/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          password,
+          tipo: userType === "cliente" ? 1 : 2,
+        }),
+      });
+  
+      if (response.ok) {
+        const data = await response.json();
+        const userId = data.id; 
+        localStorage.setItem("userId", userId);
+        console.log("Login efetuado com sucesso:", userId);
+  
+        navigate(userType === "cliente" ? "/cliente-dashboard" : "/corretor-dashboard");
+      } else {
+        const errorData = await response.json();
+        alert(errorData.error);
+      }
+    } catch (error) {
+      console.error("Erro no login:", error);
+      alert("Erro no envio dos dados");
+    }
+  };
+  
+
   const handleSubmit = (event) => {
     event.preventDefault();
 
-    if (email === "") {
-      alert("Por favor, preencha todos os campos.");
-    } else if (!isLogin && userType === "") {
-      alert("Por favor, selecione o tipo de usuário.");
-    } else if (!isLogin && userType === "cliente" && cpf === "") {
-      alert("Por favor, preencha o CPF.");
-    } else if (!isLogin && userType === "corretor" && (cpf === "" || registro_plano === "")) {
-      alert("Por favor, preencha o CPF e o Código do Corretor.");
-    } else {
-      if (isLogin) {
-        // Aqui você faria a requisição de login para o backend
-        console.log("Login efetuado com: ", { email});
-        navigate("/cliente-dashboard");
+    if (isLogin) {
+      if (email === "" || password === "") {
+        alert("Por favor, preencha todos os campos.");
+      } else if (userType === "") {
+        alert("Por favor, selecione o tipo de usuário.");
       } else {
-        if (userType === "cliente") {
-          registerCliente();
-        } else if (userType === "corretor") {
-          registerCorretor();
-        }
+        handleLogin();
+      }
+    } else {
+      if (userType === "cliente") {
+        registerCliente();
+      } else if (userType === "corretor") {
+        registerCorretor();
       }
     }
   };
@@ -113,7 +142,7 @@ function App({ isLogin }) {
                 onChange={(e) => setNome(e.target.value)}
               />
               <Input
-                label="Endereço"
+                label="Cidade"
                 type="text"
                 id="endereco"
                 placeholder="Digite seu endereço"
@@ -128,6 +157,16 @@ function App({ isLogin }) {
                 value={telefone}
                 onChange={(e) => setTelefone(e.target.value)}
               />
+              {/* Campo de data de nascimento apenas para cliente */}
+              {userType === "cliente" && (
+                <Input
+                  label="Data de Nascimento"
+                  type="date"
+                  id="nascimento"
+                  value={data_nascimento}
+                  onChange={(e) => setdata_nascimento(e.target.value)}
+                />
+              )}
             </>
           )}
 
@@ -139,29 +178,28 @@ function App({ isLogin }) {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
-          {/*<Input
+          <Input
             label="Senha"
             type="password"
             id="password"
             placeholder="Digite sua senha"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-          />*/}
+          />
 
-          {!isLogin && (
-            <div className="mb-4 text-center w-full">
-              <label className="block text-gray-700 mb-2 text-center">Tipo de Usuário</label>
-              <select
-                value={userType}
-                onChange={(e) => setUserType(e.target.value)}
-                className="border rounded-md p-2 w-full text-center"
-              >
-                <option value="">Selecione um tipo</option>
-                <option value="cliente">Cliente</option>
-                <option value="corretor">Corretor</option>
-              </select>
-            </div>
-          )}
+          <div className="mb-4 text-center w-full">
+            <label className="block text-gray-700 mb-2 text-center">Tipo de Usuário</label>
+            <select
+              value={userType}
+              onChange={(e) => setUserType(e.target.value)}
+              className="border rounded-md p-2 w-full text-center"
+            >
+              <option value="">Selecione um tipo</option>
+              <option value="cliente">Cliente</option>
+              <option value="corretor">Corretor</option>
+            </select>
+          </div>
+
           {!isLogin && (
             <Input
               label="CPF"
@@ -178,8 +216,8 @@ function App({ isLogin }) {
               type="text"
               id="corretor-code"
               placeholder="Digite o Código do Corretor"
-              value={registro_plano}
-              onChange={(e) => setregistro_plano(e.target.value)}
+              value={codigo_corretor}
+              onChange={(e) => setcodigo_corretor(e.target.value)}
             />
           )}
           <button
