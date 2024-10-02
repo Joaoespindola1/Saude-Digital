@@ -7,9 +7,11 @@ class Cliente(models.Model):
     telefone = models.CharField(max_length=15, blank=True, null=True)
     email = models.EmailField(max_length=255)
     data_nascimento = models.DateField()
+    password = models.CharField(max_length=128) 
 
     def __str__(self):
         return self.nome
+
 
 class Corretor(models.Model):
     nome = models.CharField(max_length=255)
@@ -17,10 +19,12 @@ class Corretor(models.Model):
     endereco = models.CharField(max_length=255)
     telefone = models.CharField(max_length=15, blank=True, null=True)
     email = models.EmailField(max_length=255)
-    registro_plano = models.CharField(max_length=20, unique=True)
+    codigo_coretor = models.CharField(max_length=20, unique=True)
+    password = models.CharField(max_length=128)
 
     def __str__(self):
         return self.nome
+
 
 class PlanoSaude(models.Model):
     nome_plano = models.CharField(max_length=255)
@@ -30,6 +34,7 @@ class PlanoSaude(models.Model):
 
     def __str__(self):
         return self.nome_plano
+
 
 class ClienteCorretor(models.Model):
     cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
@@ -43,6 +48,7 @@ class ClienteCorretor(models.Model):
 
     def __str__(self):
         return f"{self.cliente.nome} - {self.corretor.nome}"
+
 
 class FeedbackCliente(models.Model):
     cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
