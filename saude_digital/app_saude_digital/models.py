@@ -1,6 +1,7 @@
-from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+from django.core.validators import MaxValueValidator, MinValueValidator
 
+# Modelo Cliente
 class Cliente(models.Model):
     nome = models.CharField(max_length=255)
     cpf = models.CharField(max_length=14, unique=True)
@@ -8,39 +9,42 @@ class Cliente(models.Model):
     telefone = models.CharField(max_length=15, blank=True, null=True)
     email = models.EmailField(max_length=255)
     data_nascimento = models.DateField()
-    password = models.CharField(max_length=128) 
+    password = models.CharField(max_length=128)
 
     def __str__(self):
         return self.nome
 
-
+# Modelo Corretor
 class Corretor(models.Model):
+    foto_perfil = models.ImageField(upload_to='fotos_perfil/', blank=True, null=True)
+    capa = models.ImageField(upload_to='capas/', blank=True, null=True)
     nome = models.CharField(max_length=255)
     cpf = models.CharField(max_length=14, unique=True)
     endereco = models.CharField(max_length=255)
     telefone = models.CharField(max_length=15, blank=True, null=True)
     email = models.EmailField(max_length=255)
     codigo_corretor = models.CharField(max_length=20, unique=True)
+    descricao = models.TextField(blank=True, null=True)
+    clientes_vinculados = models.PositiveIntegerField(default=0)
     password = models.CharField(max_length=128)
 
     def __str__(self):
         return self.nome
 
-
-class PlanoSaude(models.Model):
-    nome_plano = models.CharField(max_length=255)
-    tipo_plano = models.CharField(max_length=50, blank=True, null=True)
-    cobertura = models.TextField(blank=True, null=True)
-    valor_mensal = models.DecimalField(max_digits=10, decimal_places=2)
+# Modelo de Fotos Postadas pelos Corretores
+class Foto(models.Model):
+    corretor = models.ForeignKey(Corretor, related_name='fotos_postadas', on_delete=models.CASCADE)
+    imagem = models.ImageField(upload_to='fotos_corretor/')
+    descricao = models.TextField(blank=True, null=True)
+    data_postagem = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return self.nome_plano
+        return f"Foto de {self.corretor.nome} - {self.data_postagem}"
 
-
+# Modelo de associação entre Cliente e Corretor
 class ClienteCorretor(models.Model):
     cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
     corretor = models.ForeignKey(Corretor, on_delete=models.CASCADE)
-    plano = models.ForeignKey(PlanoSaude, on_delete=models.CASCADE)
     data_associacao = models.DateField()
     status_associacao = models.CharField(max_length=20, blank=True, null=True)
 
@@ -50,7 +54,7 @@ class ClienteCorretor(models.Model):
     def __str__(self):
         return f"{self.cliente.nome} - {self.corretor.nome}"
 
-
+# Modelo de Feedback dos Clientes
 class FeedbackCliente(models.Model):
     cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
     corretor = models.ForeignKey(Corretor, on_delete=models.CASCADE)
@@ -58,7 +62,8 @@ class FeedbackCliente(models.Model):
         validators=[
             MinValueValidator(1),
             MaxValueValidator(5)
-        ]
+        ],
+        help_text="Valores entre 1 e 5"
     )
     comentario = models.TextField(blank=True, null=True)
     data_feedback = models.DateField()
