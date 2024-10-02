@@ -1,3 +1,4 @@
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
 class Cliente(models.Model):
@@ -53,7 +54,12 @@ class ClienteCorretor(models.Model):
 class FeedbackCliente(models.Model):
     cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
     corretor = models.ForeignKey(Corretor, on_delete=models.CASCADE)
-    avaliacao = models.IntegerField()
+    avaliacao = models.IntegerField(
+        validators=[
+            MinValueValidator(1),
+            MaxValueValidator(5)
+        ]
+    )
     comentario = models.TextField(blank=True, null=True)
     data_feedback = models.DateField()
 
