@@ -4,16 +4,15 @@ import Input from "./components/Input";
 import { useNavigate } from "react-router-dom";
 
 function App({ isLogin }) {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [userType, setUserType] = useState("");
-  const [cpf, setCpf] = useState("");
-  const [corretorCode, setCorretorCode] = useState("");
-  const [nome, setNome] = useState("");
-  const [endereco, setEndereco] = useState("");
-  const [telefone, setTelefone] = useState("");
-  const [dataNascimento, setDataNascimento] = useState("");
-  const navigate = useNavigate();
+  const [email, setEmail] = useState("")
+  // const [password, setPassword] = useState("")
+  const [userType, setUserType] = useState("")
+  const [cpf, setCpf] = useState("")
+  const [registro_plano, setregistro_plano] = useState("")
+  const [nome, setNome] = useState("")
+  const [endereco, setEndereco] = useState("")
+  const [telefone, setTelefone] = useState("")
+  const navigate = useNavigate()
 
   // Função para cadastrar Cliente
   const registerCliente = async () => {
@@ -28,8 +27,7 @@ function App({ isLogin }) {
           cpf,
           endereco,
           telefone,
-          email,
-          data_nascimento: dataNascimento,
+          email
         }),
       });
 
@@ -43,12 +41,10 @@ function App({ isLogin }) {
     } catch (error) {
       console.error("Erro no envio dos dados", error);
     }
-  };
-
-  // Função para cadastrar Corretor
+  }
   const registerCorretor = async () => {
     try {
-      const response = await fetch("http://localhost:5000/api/corretores", {
+      const response = await fetch("http://127.0.0.1:8000/cadastro_corretor/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -59,7 +55,7 @@ function App({ isLogin }) {
           endereco,
           telefone,
           email,
-          registro_corretor: corretorCode,
+          registro_plano,
         }),
       });
 
@@ -75,22 +71,21 @@ function App({ isLogin }) {
     }
   };
 
-  // Função de envio dos dados
   const handleSubmit = (event) => {
     event.preventDefault();
 
-    if (email === "" || password === "") {
+    if (email === "") {
       alert("Por favor, preencha todos os campos.");
     } else if (!isLogin && userType === "") {
       alert("Por favor, selecione o tipo de usuário.");
     } else if (!isLogin && userType === "cliente" && cpf === "") {
       alert("Por favor, preencha o CPF.");
-    } else if (!isLogin && userType === "corretor" && (cpf === "" || corretorCode === "")) {
+    } else if (!isLogin && userType === "corretor" && (cpf === "" || registro_plano === "")) {
       alert("Por favor, preencha o CPF e o Código do Corretor.");
     } else {
       if (isLogin) {
         // Aqui você faria a requisição de login para o backend
-        console.log("Login efetuado com: ", { email, password });
+        console.log("Login efetuado com: ", { email});
         navigate("/cliente-dashboard");
       } else {
         if (userType === "cliente") {
@@ -133,13 +128,6 @@ function App({ isLogin }) {
                 value={telefone}
                 onChange={(e) => setTelefone(e.target.value)}
               />
-              <Input
-                label="Data de Nascimento"
-                type="date"
-                id="data-nascimento"
-                value={dataNascimento}
-                onChange={(e) => setDataNascimento(e.target.value)}
-              />
             </>
           )}
 
@@ -151,14 +139,14 @@ function App({ isLogin }) {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
-          <Input
+          {/*<Input
             label="Senha"
             type="password"
             id="password"
             placeholder="Digite sua senha"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-          />
+          />*/}
 
           {!isLogin && (
             <div className="mb-4 text-center w-full">
@@ -190,8 +178,8 @@ function App({ isLogin }) {
               type="text"
               id="corretor-code"
               placeholder="Digite o Código do Corretor"
-              value={corretorCode}
-              onChange={(e) => setCorretorCode(e.target.value)}
+              value={registro_plano}
+              onChange={(e) => setregistro_plano(e.target.value)}
             />
           )}
           <button
