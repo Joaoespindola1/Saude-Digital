@@ -29,7 +29,7 @@ class Corretor(models.Model):
     def __str__(self):
         return self.nome
 
-class Foto(models.Model):
+class Postagem(models.Model):
     corretor = models.ForeignKey(Corretor, related_name='fotos_postadas', on_delete=models.CASCADE)
     imagem = models.ImageField(upload_to='fotos_corretor/')
     descricao = models.TextField(blank=True, null=True)
