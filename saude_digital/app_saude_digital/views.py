@@ -21,6 +21,7 @@ def cadastro_cliente(request):
             telefone = data.get('telefone', None)  # Telefone e opcional
             email = data.get('email')
             data_nascimento = data.get('data_nascimento')
+            password = data.get('password')
 
             if not (nome and cpf and endereco and email and data_nascimento):
                 return JsonResponse({'error': 'Todos os campos obrigatorios devem ser preenchidos.'}, status=400)
@@ -32,7 +33,8 @@ def cadastro_cliente(request):
                 endereco=endereco,
                 telefone=telefone,
                 email=email,
-                data_nascimento=data_nascimento
+                data_nascimento=data_nascimento,
+                password=password
             )
 
             # Retorna o cliente criado como JSON
@@ -45,7 +47,8 @@ def cadastro_cliente(request):
                     'endereco': cliente.endereco,
                     'telefone': cliente.telefone,
                     'email': cliente.email,
-                    'data_nascimento': cliente.data_nascimento
+                    'data_nascimento': cliente.data_nascimento,
+                    'password': cliente.password
                 }
             }, status=201)
 
@@ -69,10 +72,11 @@ def cadastro_corretor(request):
             endereco = data.get('endereco')
             telefone = data.get('telefone')
             email = data.get('email')
-            registro_plano = data.get('registro_plano')
+            codigo_corretor = data.get('codigo_corretor')
+            password = data.get('password')
 
             # Validacao dos dados
-            if not all([nome, cpf, endereco, email, registro_plano]):
+            if not all([nome, cpf, endereco, email, codigo_corretor, password]):
                 return JsonResponse({'error': 'Todos os campos sao obrigatorios.'}, status=400)
 
             # Cria o objeto Corretor e salva no banco de dados
@@ -82,7 +86,8 @@ def cadastro_corretor(request):
                 endereco=endereco,
                 telefone=telefone,
                 email=email,
-                registro_plano=registro_plano
+                codigo_corretor=codigo_corretor,
+                password=password
             )
             corretor.save()
 
@@ -101,10 +106,10 @@ def cadastro_corretor(request):
 def ver_clientes(request):
     if request.method == 'GET':
         # Obtem todos os objetos do modelo Cliente
-        corretores = list(Cliente.objects.values())  # Converte para uma lista de dicionarios
+        clientes = list(Cliente.objects.values())  # Converte para uma lista de dicionarios
 
         # Retorna a resposta JSON
-        return JsonResponse({'corretores': corretores}, safe=False)
+        return JsonResponse({'clientes': clientes}, safe=False)
     else:
         # Retorna erro caso nao seja uma requisicao GET
         return JsonResponse({'error': 'Metodo nao permitido. Use GET.'}, status=405)
@@ -153,7 +158,7 @@ def busca_corretor_id(request):
             'endereco': corretor.endereco,
             'telefone': corretor.telefone,
             'email': corretor.email,
-            'registro_plano': corretor.registro_plano
+            'codigo_corretor': corretor.codigo_corretor
         }
 
         # Retorna a resposta JSON

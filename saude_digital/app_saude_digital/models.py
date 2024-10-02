@@ -19,7 +19,7 @@ class Corretor(models.Model):
     endereco = models.CharField(max_length=255)
     telefone = models.CharField(max_length=15, blank=True, null=True)
     email = models.EmailField(max_length=255)
-    codigo_coretor = models.CharField(max_length=20, unique=True)
+    codigo_corretor = models.CharField(max_length=20, unique=True)
     password = models.CharField(max_length=128)
 
     def __str__(self):
