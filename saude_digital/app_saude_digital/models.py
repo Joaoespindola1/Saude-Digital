@@ -1,7 +1,6 @@
 from django.db import models
 from django.core.validators import MaxValueValidator, MinValueValidator
 
-# Modelo Cliente
 class Cliente(models.Model):
     nome = models.CharField(max_length=255)
     cpf = models.CharField(max_length=14, unique=True)
@@ -14,7 +13,6 @@ class Cliente(models.Model):
     def __str__(self):
         return self.nome
 
-# Modelo Corretor
 class Corretor(models.Model):
     foto_perfil = models.ImageField(upload_to='fotos_perfil/', blank=True, null=True)
     capa = models.ImageField(upload_to='capas/', blank=True, null=True)
@@ -31,7 +29,6 @@ class Corretor(models.Model):
     def __str__(self):
         return self.nome
 
-# Modelo de Fotos Postadas pelos Corretores
 class Foto(models.Model):
     corretor = models.ForeignKey(Corretor, related_name='fotos_postadas', on_delete=models.CASCADE)
     imagem = models.ImageField(upload_to='fotos_corretor/')
@@ -41,7 +38,6 @@ class Foto(models.Model):
     def __str__(self):
         return f"Foto de {self.corretor.nome} - {self.data_postagem}"
 
-# Modelo de associação entre Cliente e Corretor
 class ClienteCorretor(models.Model):
     cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
     corretor = models.ForeignKey(Corretor, on_delete=models.CASCADE)
@@ -54,7 +50,6 @@ class ClienteCorretor(models.Model):
     def __str__(self):
         return f"{self.cliente.nome} - {self.corretor.nome}"
 
-# Modelo de Feedback dos Clientes
 class FeedbackCliente(models.Model):
     cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
     corretor = models.ForeignKey(Corretor, on_delete=models.CASCADE)
