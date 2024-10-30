@@ -65,3 +65,10 @@ class FeedbackCliente(models.Model):
 
     def __str__(self):
         return f"Feedback de {self.cliente.nome} para {self.corretor.nome}"
+        
+class PlanoDeSaude(models.Model):
+    plano_especialidade = models.CharField(max_length=100)
+    corretor = models.ForeignKey(Corretor, on_delete=models.CASCADE, related_name='planos')
+
+    def __str__(self):
+        return f"{self.plano_especialidade} - {self.corretor.nome}"
