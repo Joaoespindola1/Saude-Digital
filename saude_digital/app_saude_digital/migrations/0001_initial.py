@@ -77,4 +77,12 @@ class Migration(migrations.Migration):
                 'unique_together': {('cliente', 'corretor')},
             },
         ),
+        migrations.CreateModel(
+            name='PlanoDeSaude',
+            fields=[
+                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('plano_especialidade', models.CharField(max_length=100)),
+                ('corretor', models.ForeignKey(on_delete=models.CASCADE, related_name='planos', to='app_name.Corretor')),
+            ],
+        ),
     ]
