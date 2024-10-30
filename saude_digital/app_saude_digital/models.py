@@ -61,7 +61,7 @@ class FeedbackCliente(models.Model):
         help_text="Valores entre 1 e 5"
     )
     comentario = models.TextField(blank=True, null=True)
-    data_feedback = models.DateField()
+    data_feedback = models.DateField(auto_now_add=True)
 
     def __str__(self):
         return f"Feedback de {self.cliente.nome} para {self.corretor.nome}"

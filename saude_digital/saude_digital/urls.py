@@ -10,7 +10,9 @@ urlpatterns = [
     path('corretores/', views.ver_corretores, name='ver_corretores'),
     path('busca_corretor/', views.busca_corretor, name='busca_corretor'),
     path('busca_corretor_id/', views.busca_corretor_id, name='busca_corretor_id'),
+    path('atualiza_corretor/', views.atualiza_corretor, name='atualiza_corretor'),
     path('busca_endereco/', views.busca_endereco, name='busca_endereco'),
     path('login/', views.login, name='login'),
+    path('cadastra_avaliacao/', views.cadastra_avaliacao, name='cadastra_avaliacao'),
 ]
 

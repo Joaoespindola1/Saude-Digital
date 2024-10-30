@@ -1,7 +1,7 @@
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render, get_object_or_404
-from .models import Cliente, Corretor
+from .models import Cliente, Corretor, FeedbackCliente
 import json
 
 def home(request):
@@ -170,6 +170,57 @@ def busca_corretor_id(request):
         return JsonResponse({'error': 'Metodo nao permitido. Use GET.'}, status=405)
 
 
+@csrf_exempt
+def atualiza_corretor(request):
+    if request.method == 'POST':
+        try:
+            # Parseia os dados do corpo da requisição JSON
+            data = json.loads(request.body)
+
+            # Obtém o ID do corretor a partir dos dados JSON
+            id = data.get('id')
+            if not id:
+                return JsonResponse({'error': 'ID do corretor e obrigatorio.'}, status=400)
+
+            # Obtém o corretor pelo ID, retornando um 404 se não encontrado
+            corretor = get_object_or_404(Corretor, id=id)
+
+            # Atualiza os campos permitidos, mantendo os valores atuais se não forem enviados
+            corretor.nome = data.get('nome', corretor.nome)
+            corretor.cpf = data.get('cpf', corretor.cpf)
+            corretor.endereco = data.get('endereco', corretor.endereco)
+            corretor.telefone = data.get('telefone', corretor.telefone)
+            corretor.email = data.get('email', corretor.email)
+            corretor.codigo_corretor = data.get('codigo_corretor', corretor.codigo_corretor)
+            corretor.password = data.get('password', corretor.password)
+            corretor.descricao = data.get('descricao', corretor.descricao)
+
+            # Salva as alterações no banco de dados
+            corretor.save()
+
+            # Retorna o corretor atualizado como JSON
+            return JsonResponse({
+                'message': 'Corretor atualizado com sucesso!',
+                'corretor': {
+                    'id': corretor.id,
+                    'nome': corretor.nome,
+                    'cpf': corretor.cpf,
+                    'endereco': corretor.endereco,
+                    'telefone': corretor.telefone,
+                    'email': corretor.email,
+                    'codigo_corretor': corretor.codigo_corretor,
+                    'descricao': corretor.descricao,
+                }
+            }, status=200)
+
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Dados JSON invalidos.'}, status=400)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+    else:
+        return JsonResponse({'error': 'Metodo nao permitido. Use POST.'}, status=405)
+
+
 def busca_endereco(request):
     if request.method == 'GET':
         # Obtem o nome da requisicao
@@ -221,3 +272,62 @@ def login(request):
             return JsonResponse({'error': 'Dados JSON invalidos.'}, status=400)
     else:
         return JsonResponse({'error': 'Metodo nao permitido.'}, status=405)
+    
+
+@csrf_exempt
+def cadastra_avaliacao(request):
+    if request.method == 'POST':
+        try:
+            # Parseia os dados do corpo da requisição JSON
+            data = json.loads(request.body)
+
+            # Obtém o ID do cliente e do corretor e a avaliação
+            cliente_id = data.get('cliente_id')
+            corretor_id = data.get('corretor_id')
+            avaliacao = data.get('avaliacao')
+            comentario = data.get('comentario', '')
+
+            # Valida se os campos obrigatórios estão presentes
+            if not all([cliente_id, corretor_id, avaliacao]):
+                return JsonResponse({'error': 'Cliente ID, Corretor ID e avaliacao sao obrigatorios.'}, status=400)
+
+            # Verifica se o cliente e corretor existem
+            try:
+                cliente = Cliente.objects.get(id=cliente_id)
+                corretor = Corretor.objects.get(id=corretor_id)
+            except Cliente.DoesNotExist:
+                return JsonResponse({'error': 'Cliente nao encontrado.'}, status=404)
+            except Corretor.DoesNotExist:
+                return JsonResponse({'error': 'Corretor nao encontrado.'}, status=404)
+
+            # Tenta obter um feedback existente para o cliente e corretor
+            feedback, created = FeedbackCliente.objects.update_or_create(
+                cliente=cliente,
+                corretor=corretor,
+                defaults={'avaliacao': avaliacao, 'comentario': comentario}
+            )
+
+            # Prepara a mensagem de resposta
+            if created:
+                message = 'Avaliacao criada com sucesso!'
+            else:
+                message = 'Avaliacao atualizada com sucesso!'
+
+            return JsonResponse({
+                'message': message,
+                'feedback': {
+                    'id': feedback.id,
+                    'cliente': feedback.cliente.nome,
+                    'corretor': feedback.corretor.nome,
+                    'avaliacao': feedback.avaliacao,
+                    'comentario': feedback.comentario,
+                    'data_feedback': feedback.data_feedback
+                }
+            }, status=200)
+
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Dados JSON invalidos.'}, status=400)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+    else:
+        return JsonResponse({'error': 'Metodo nao permitido. Use POST.'}, status=405)
