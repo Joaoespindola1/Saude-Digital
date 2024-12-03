@@ -1,7 +1,9 @@
+from django.db.models import Avg
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render, get_object_or_404
-from .models import Cliente, Corretor, FeedbackCliente
+from django.utils import timezone
+from .models import Cliente, Corretor, FeedbackCliente, ClienteCorretor
 import json
 
 def home(request):
@@ -331,3 +333,94 @@ def cadastra_avaliacao(request):
             return JsonResponse({'error': str(e)}, status=500)
     else:
         return JsonResponse({'error': 'Metodo nao permitido. Use POST.'}, status=405)
+    
+
+@csrf_exempt
+def ver_avaliacao_corretor(request):
+    if request.method == 'POST':
+        try:
+            # Parseia o corpo da requisição para obter o ID do corretor
+            data = json.loads(request.body)
+            corretor_id = data.get('id')
+
+            # Valida se o ID foi enviado
+            if not corretor_id:
+                return JsonResponse({'error': 'O campo "id" do corretor e obrigatorio.'}, status=400)
+
+            # Verifica se o corretor existe
+            try:
+                Corretor.objects.get(id=corretor_id)
+            except Corretor.DoesNotExist:
+                return JsonResponse({'error': 'Corretor nao encontrado.'}, status=404)
+
+            # Calcula a média das avaliações do corretor
+            media = FeedbackCliente.objects.filter(corretor_id=corretor_id).aggregate(media_avaliacao=Avg('avaliacao'))
+
+            # Arredonda a média para 2 casas decimais (ou retorna 0 se for None)
+            media_avaliacao = round(media['media_avaliacao'] or 0, 1)
+
+            return JsonResponse({
+                'corretor_id': corretor_id,
+                'media_avaliacao': media_avaliacao
+            }, status=200)
+
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Dados JSON invalidos.'}, status=400)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+    else:
+        return JsonResponse({'error': 'Metodo nao permitido. Use POST.'}, status=405)
+    
+
+@csrf_exempt
+def associar_cliente_a_corretor(request):
+    if request.method == 'POST':
+        try:
+            # Parseia os dados do corpo da requisição JSON
+            data = json.loads(request.body)
+            cliente_id = data.get('cliente_id')
+            corretor_id = data.get('corretor_id')
+            status_associacao = data.get('status_associacao', 'ativo')  # Default para "ativo"
+
+            # Verifica se os IDs foram fornecidos
+            if not cliente_id or not corretor_id:
+                return JsonResponse({'error': 'Cliente ID e Corretor ID sao obrigatorios.'}, status=400)
+
+            # Verifica se o cliente e o corretor existem
+            cliente = get_object_or_404(Cliente, id=cliente_id)
+            corretor = get_object_or_404(Corretor, id=corretor_id)
+
+            # Cria ou atualiza a associação entre cliente e corretor
+            associacao, created = ClienteCorretor.objects.update_or_create(
+                cliente=cliente,
+                corretor=corretor,
+                defaults={
+                    'data_associacao': timezone.now().date(),
+                    'status_associacao': status_associacao
+                }
+            )
+
+            # Prepara a resposta
+            if created:
+                message = 'Cliente associado ao corretor com sucesso!'
+            else:
+                message = 'Associacao atualizada com sucesso!'
+
+            return JsonResponse({
+                'message': message,
+                'associacao': {
+                    'cliente': cliente.nome,
+                    'corretor': corretor.nome,
+                    'data_associacao': associacao.data_associacao,
+                    'status_associacao': associacao.status_associacao
+                }
+            }, status=200)
+
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Dados JSON invalidos.'}, status=400)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+
+    else:
+        return JsonResponse({'error': 'Metodo nao permitido. Use POST.'}, status=405)
+    

@@ -14,5 +14,7 @@ urlpatterns = [
     path('busca_endereco/', views.busca_endereco, name='busca_endereco'),
     path('login/', views.login, name='login'),
     path('cadastra_avaliacao/', views.cadastra_avaliacao, name='cadastra_avaliacao'),
+    path('ver_avaliacao_corretor/', views.ver_avaliacao_corretor, name='ver_avaliacao_corretor'),
+    path('associar_cliente_a_corretor/', views.associar_cliente_a_corretor, name='associar_cliente_a_corretor'),
 ]
 
