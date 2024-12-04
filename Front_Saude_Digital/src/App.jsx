@@ -1,6 +1,12 @@
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import Input from "./components/Input"
 import { useNavigate } from "react-router-dom"
+import "leaflet/dist/leaflet.css";
+import { GoogleMap, LoadScript, Autocomplete, MarkerF } from "@react-google-maps/api";
+
+const libraries = ["places"];
+
+
 
 function App({ isLogin }) {
   const [email, setEmail] = useState("")
@@ -12,7 +18,22 @@ function App({ isLogin }) {
   const [endereco, setEndereco] = useState("")
   const [telefone, setTelefone] = useState("")
   const [data_nascimento, setdata_nascimento] = useState("")
+  const [address, setAddress] = useState("");
+  const [coordinates, setCoordinates] = useState({ lat: 0, lng: 0 });
+  const [autocomplete, setAutocomplete] = useState(null);
   const navigate = useNavigate();
+
+  const handlePlaceSelect = () => {
+    if (autocomplete) {
+      const place = autocomplete.getPlace();
+      if (place.geometry) {
+        const lat = place.geometry.location.lat();
+        const lng = place.geometry.location.lng();
+        setCoordinates({ lat, lng });
+        setAddress(place.formatted_address);
+      }
+    }
+  }
 
   const registerCliente = async () => {
     try {
@@ -59,6 +80,7 @@ function App({ isLogin }) {
           email,
           codigo_corretor,
           password,
+          coordinates,
         }),
       })
 
@@ -87,13 +109,13 @@ function App({ isLogin }) {
           tipo: userType === "cliente" ? 1 : 2,
         }),
       });
-  
+
       if (response.ok) {
         const data = await response.json();
-        const userId = data.id; 
+        const userId = data.id;
         localStorage.setItem("userId", userId);
         console.log("Login efetuado com sucesso:", userId);
-  
+
         navigate(userType === "cliente" ? "/cliente-dashboard" : "/corretor-dashboard");
       } else {
         const errorData = await response.json();
@@ -104,7 +126,14 @@ function App({ isLogin }) {
       alert("Erro no envio dos dados");
     }
   };
-  
+
+  const handleMarkerDragEnd = (event) => {
+    setCoordinates({
+      lat: event.latLng.lat(),
+      lng: event.latLng.lng(),
+    });
+    console.log(coordinates)
+  };
 
   const handleSubmit = (event) => {
     event.preventDefault();
@@ -219,6 +248,44 @@ function App({ isLogin }) {
               value={codigo_corretor}
               onChange={(e) => setcodigo_corretor(e.target.value)}
             />
+          )}
+          {!isLogin && userType === "corretor" && (
+            <>
+              <div className="mb-4 text-center w-full">
+                <LoadScript googleMapsApiKey="AIzaSyCkbGLjCfHuHiTCCHnRl4Vb52p04Gw1fe0" libraries={libraries}>
+                  <div className="w-full max-w-lg">
+                    <h1 className="text-2xl mb-4">Digite um endereço:</h1>
+                    <Autocomplete
+                      onLoad={(autocompleteInstance) => setAutocomplete(autocompleteInstance)}
+                      onPlaceChanged={handlePlaceSelect}
+                    >
+                      <input
+                        type="text"
+                        placeholder="Digite o endereço"
+                        className="border p-2 w-full rounded"
+                        value={address}
+                        onChange={(e) => setAddress(e.target.value)}
+                      />
+                    </Autocomplete>
+                    <div className="mt-4">
+                      <p><strong>Endereço selecionado:</strong> {address}</p>
+                    </div>
+                    <GoogleMap
+                      mapContainerStyle={{ height: "400px", width: "100%" }}
+                      center={coordinates}
+                      zoom={14}
+                    >
+                    <MarkerF
+                      position={coordinates}
+                      draggable={true}
+                      onDragEnd={handleMarkerDragEnd}
+                    />
+                    </GoogleMap>
+
+                  </div>
+                </LoadScript>
+              </div>
+            </>
           )}
           <button
             type="submit"

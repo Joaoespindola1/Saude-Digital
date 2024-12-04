@@ -25,6 +25,8 @@ class Corretor(models.Model):
     descricao = models.TextField(blank=True, null=True)
     clientes_vinculados = models.PositiveIntegerField(default=0)
     password = models.CharField(max_length=128)
+    latitude = models.DecimalField(max_digits=20, decimal_places=18, null=True, blank=True)
+    longitude = models.DecimalField(max_digits=20, decimal_places=18, null=True, blank=True)
 
     def __str__(self):
         return self.nome

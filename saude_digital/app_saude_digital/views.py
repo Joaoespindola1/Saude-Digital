@@ -76,6 +76,8 @@ def cadastro_corretor(request):
             email = data.get('email')
             codigo_corretor = data.get('codigo_corretor')
             password = data.get('password')
+            latitude = data.get('coordinates').get('lat')
+            longitude = data.get('coordinates').get('lng')
 
             # Validacao dos dados
             if not all([nome, cpf, endereco, email, codigo_corretor, password]):
@@ -89,7 +91,9 @@ def cadastro_corretor(request):
                 telefone=telefone,
                 email=email,
                 codigo_corretor=codigo_corretor,
-                password=password
+                password=password,
+                latitude=latitude,
+                longitude=longitude,
             )
             corretor.save()
 
@@ -333,7 +337,7 @@ def cadastra_avaliacao(request):
             return JsonResponse({'error': str(e)}, status=500)
     else:
         return JsonResponse({'error': 'Método não permitido. Use POST.'}, status=405)
-    
+
 
 @csrf_exempt
 def ver_avaliacao_corretor(request):
@@ -387,7 +391,7 @@ def ver_avaliacao_corretor(request):
             return JsonResponse({'error': str(e)}, status=500)
     else:
         return JsonResponse({'error': 'Método não permitido. Use POST.'}, status=405)
-    
+
 
 @csrf_exempt
 def associar_cliente_a_corretor(request):
@@ -440,4 +444,3 @@ def associar_cliente_a_corretor(request):
 
     else:
         return JsonResponse({'error': 'Metodo nao permitido. Use POST.'}, status=405)
-    
