@@ -74,6 +74,8 @@ def cadastro_corretor(request):
             email = data.get('email')
             codigo_corretor = data.get('codigo_corretor')
             password = data.get('password')
+            latitude = data.get('coordinates').get('lat')
+            longitude = data.get('coordinates').get('lng')
 
             # Validacao dos dados
             if not all([nome, cpf, endereco, email, codigo_corretor, password]):
@@ -87,7 +89,9 @@ def cadastro_corretor(request):
                 telefone=telefone,
                 email=email,
                 codigo_corretor=codigo_corretor,
-                password=password
+                password=password,
+                latitude=latitude,
+                longitude=longitude,
             )
             corretor.save()
 
@@ -150,7 +154,7 @@ def busca_corretor_id(request):
         # Busca o corretor pelo ID
         corretor = get_object_or_404(Corretor, id=id)
 
-        # Converte o objeto do corretor para dicionário
+        # Converte o objeto do corretor para dicionï¿½rio
         corretor_data = {
             'id': corretor.id,
             #'foto_perfil': corretor.foto_perfil,
@@ -174,18 +178,18 @@ def busca_corretor_id(request):
 def atualiza_corretor(request):
     if request.method == 'POST':
         try:
-            # Parseia os dados do corpo da requisição JSON
+            # Parseia os dados do corpo da requisiï¿½ï¿½o JSON
             data = json.loads(request.body)
 
-            # Obtém o ID do corretor a partir dos dados JSON
+            # Obtï¿½m o ID do corretor a partir dos dados JSON
             id = data.get('id')
             if not id:
                 return JsonResponse({'error': 'ID do corretor e obrigatorio.'}, status=400)
 
-            # Obtém o corretor pelo ID, retornando um 404 se não encontrado
+            # Obtï¿½m o corretor pelo ID, retornando um 404 se nï¿½o encontrado
             corretor = get_object_or_404(Corretor, id=id)
 
-            # Atualiza os campos permitidos, mantendo os valores atuais se não forem enviados
+            # Atualiza os campos permitidos, mantendo os valores atuais se nï¿½o forem enviados
             corretor.nome = data.get('nome', corretor.nome)
             corretor.cpf = data.get('cpf', corretor.cpf)
             corretor.endereco = data.get('endereco', corretor.endereco)
@@ -195,7 +199,7 @@ def atualiza_corretor(request):
             corretor.password = data.get('password', corretor.password)
             corretor.descricao = data.get('descricao', corretor.descricao)
 
-            # Salva as alterações no banco de dados
+            # Salva as alteraï¿½ï¿½es no banco de dados
             corretor.save()
 
             # Retorna o corretor atualizado como JSON
@@ -241,13 +245,13 @@ def busca_endereco(request):
 def login(request):
     if request.method == 'POST':
         try:
-            # Decodificando o JSON da requisição
+            # Decodificando o JSON da requisiï¿½ï¿½o
             data = json.loads(request.body)
             email = data.get('email')
             password = data.get('password')
             tipo = data.get('tipo')
 
-            # Verificando se os campos obrigatórios foram fornecidos
+            # Verificando se os campos obrigatï¿½rios foram fornecidos
             if not email or not password or not tipo:
                 return JsonResponse({'error': 'E-mail, senha e tipo sao obrigatorios.'}, status=400)
 
@@ -278,16 +282,16 @@ def login(request):
 def cadastra_avaliacao(request):
     if request.method == 'POST':
         try:
-            # Parseia os dados do corpo da requisição JSON
+            # Parseia os dados do corpo da requisiï¿½ï¿½o JSON
             data = json.loads(request.body)
 
-            # Obtém o ID do cliente e do corretor e a avaliação
+            # Obtï¿½m o ID do cliente e do corretor e a avaliaï¿½ï¿½o
             cliente_id = data.get('cliente_id')
             corretor_id = data.get('corretor_id')
             avaliacao = data.get('avaliacao')
             comentario = data.get('comentario', '')
 
-            # Valida se os campos obrigatórios estão presentes
+            # Valida se os campos obrigatï¿½rios estï¿½o presentes
             if not all([cliente_id, corretor_id, avaliacao]):
                 return JsonResponse({'error': 'Cliente ID, Corretor ID e avaliacao sao obrigatorios.'}, status=400)
 
