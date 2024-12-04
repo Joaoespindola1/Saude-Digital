@@ -36,10 +36,6 @@ const router = createBrowserRouter([
     element: <CorretorPerfil />,
   },
   {
-    path: '/messages', 
-    element: <Mensagens />,
-  },
-  {
     path: '/corretor-perfil-edit/:id', 
     element: <PerfilCorretorEdit />,
   },

@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react'
-import Button from '../components/Button'
-import { useNavigate } from 'react-router-dom'
-import axios from 'axios'
+import { useEffect, useState } from 'react';
+import Button from '../components/Button';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
-import LogoutButton from "../components/LogoutButton"
-import Chat from '../components/Chat'
+import LogoutButton from "../components/LogoutButton";
+import Chat from '../components/Chat';
 
 function ClienteDashboard() {
   const navigate = useNavigate();
@@ -28,10 +28,33 @@ function ClienteDashboard() {
         const response = await axios.get('http://127.0.0.1:8000/corretores/');
         const corretoresData = response.data.corretores;
 
-        const uniqueRegioes = [...new Set(corretoresData.map((corretor) => corretor.endereco))];
+        const corretoresComAvaliacao = await Promise.all(
+          corretoresData.map(async (corretor) => {
+            try {
+              const avaliacaoResponse = await axios.post(
+                'http://127.0.0.1:8000/ver_avaliacao_corretor/',
+                { id: corretor.id }
+              );
+              return {
+                ...corretor,
+                media_avaliacao: avaliacaoResponse.data.media_avaliacao || 0,
+              };
+            } catch (error) {
+              console.error(`Erro ao buscar avaliação para corretor ${corretor.id}:`, error);
+              return {
+                ...corretor,
+                media_avaliacao: 0,
+              };
+            }
+          })
+        );
 
-        setCorretores(corretoresData);
-        setFilteredCorretores(corretoresData);
+        const uniqueRegioes = [
+          ...new Set(corretoresComAvaliacao.map((corretor) => corretor.endereco)),
+        ];
+
+        setCorretores(corretoresComAvaliacao);
+        setFilteredCorretores(corretoresComAvaliacao);
         setRegioes(uniqueRegioes);
       } catch (error) {
         console.error('Erro ao buscar corretores:', error);
@@ -98,7 +121,11 @@ function ClienteDashboard() {
           <h2 className="text-xl font-bold mb-4">Filtros</h2>
           <div className="mb-4">
             <label className="block text-gray-700 mb-2">Região</label>
-            <select className="border rounded-md p-2 w-full" value={selectedRegiao} onChange={handleRegiaoChange}>
+            <select
+              className="border rounded-md p-2 w-full"
+              value={selectedRegiao}
+              onChange={handleRegiaoChange}
+            >
               <option value="">Selecione uma região</option>
               {regioes.map((regiao, index) => (
                 <option key={index} value={regiao}>
@@ -107,22 +134,14 @@ function ClienteDashboard() {
               ))}
             </select>
           </div>
-          <div className="mb-4">
-            <label className="block text-gray-700 mb-2">Plano de Saúde</label>
-            <select className="border rounded-md p-2 w-full" value={selectedPlano} onChange={handlePlanoChange}>
-              <option value="">Selecione um plano</option>
-              {planos.map((plano) => (
-                <option key={plano.id} value={plano.id}>
-                  {plano.plano_especialidade}
-                </option>
-              ))}
-            </select>
-          </div>
         </aside>
         <main className="w-3/4 bg-bg_bege p-4">
           <div className="grid grid-cols-3 gap-4">
             {filteredCorretores.map((corretor) => (
-              <div key={corretor.id} className="bg-white p-4 rounded shadow-md relative">
+              <div
+                key={corretor.id}
+                className="bg-white p-4 rounded shadow-md relative"
+              >
                 <div className="absolute top-2 left-2 bg-yellow-300 text-black font-bold px-2 py-1 rounded">
                   {corretor.media_avaliacao ? corretor.media_avaliacao.toFixed(1) : "N/A"}
                 </div>
@@ -140,7 +159,7 @@ function ClienteDashboard() {
           </div>
         </main>
       </div>
-      <Chat/>
+      <Chat />
     </div>
   );
 }

@@ -1,23 +1,13 @@
 import { useState } from 'react';
 
-function ChatPopup() {
+function Chat() {
   const [isOpen, setIsOpen] = useState(false); // Estado para abrir/fechar o popup
   const [selectedConversation, setSelectedConversation] = useState(null); // Estado para a conversa selecionada
   const [conversations, setConversations] = useState([
-    // Mock de conversas
-    { id: 1, name: 'Corretor João', lastMessage: 'Olá, como posso ajudar?' },
-    { id: 2, name: 'Corretor Maria', lastMessage: 'Precisa de ajuda com o plano?' },
+    { id: 1, name: 'Em produção'}
   ]);
 
-  const [messages, setMessages] = useState({
-    1: [
-      { from: 'Corretor João', text: 'Olá, como posso ajudar?', timestamp: '10:00' },
-      { from: 'Você', text: 'Preciso de mais informações sobre o plano.', timestamp: '10:05' },
-    ],
-    2: [
-      { from: 'Corretor Maria', text: 'Precisa de ajuda com o plano?', timestamp: '11:00' },
-    ],
-  });
+  const [messages, setMessages] = useState();
 
   const toggleChat = () => {
     setIsOpen(!isOpen);
@@ -59,7 +49,7 @@ function ChatPopup() {
                 <div
                   key={conversation.id}
                   className="p-2 border-b cursor-pointer hover:bg-gray-100"
-                  onClick={() => openConversation(conversation.id)}
+                  
                 >
                   <p className="font-bold">{conversation.name}</p>
                   <p className="text-sm text-gray-600 truncate">{conversation.lastMessage}</p>
@@ -106,4 +96,4 @@ function ChatPopup() {
   );
 }
 
-export default ChatPopup;
+export default Chat

@@ -152,7 +152,7 @@ def busca_corretor_id(request):
         # Busca o corretor pelo ID
         corretor = get_object_or_404(Corretor, id=id)
 
-        # Converte o objeto do corretor para dicionário
+        # Converte o objeto do corretor para dicionï¿½rio
         corretor_data = {
             'id': corretor.id,
             #'foto_perfil': corretor.foto_perfil,
@@ -176,18 +176,18 @@ def busca_corretor_id(request):
 def atualiza_corretor(request):
     if request.method == 'POST':
         try:
-            # Parseia os dados do corpo da requisição JSON
+            # Parseia os dados do corpo da requisiï¿½ï¿½o JSON
             data = json.loads(request.body)
 
-            # Obtém o ID do corretor a partir dos dados JSON
+            # Obtï¿½m o ID do corretor a partir dos dados JSON
             id = data.get('id')
             if not id:
                 return JsonResponse({'error': 'ID do corretor e obrigatorio.'}, status=400)
 
-            # Obtém o corretor pelo ID, retornando um 404 se não encontrado
+            # Obtï¿½m o corretor pelo ID, retornando um 404 se nï¿½o encontrado
             corretor = get_object_or_404(Corretor, id=id)
 
-            # Atualiza os campos permitidos, mantendo os valores atuais se não forem enviados
+            # Atualiza os campos permitidos, mantendo os valores atuais se nï¿½o forem enviados
             corretor.nome = data.get('nome', corretor.nome)
             corretor.cpf = data.get('cpf', corretor.cpf)
             corretor.endereco = data.get('endereco', corretor.endereco)
@@ -197,7 +197,7 @@ def atualiza_corretor(request):
             corretor.password = data.get('password', corretor.password)
             corretor.descricao = data.get('descricao', corretor.descricao)
 
-            # Salva as alterações no banco de dados
+            # Salva as alteraï¿½ï¿½es no banco de dados
             corretor.save()
 
             # Retorna o corretor atualizado como JSON
@@ -243,13 +243,13 @@ def busca_endereco(request):
 def login(request):
     if request.method == 'POST':
         try:
-            # Decodificando o JSON da requisição
+            # Decodificando o JSON da requisiï¿½ï¿½o
             data = json.loads(request.body)
             email = data.get('email')
             password = data.get('password')
             tipo = data.get('tipo')
 
-            # Verificando se os campos obrigatórios foram fornecidos
+            # Verificando se os campos obrigatï¿½rios foram fornecidos
             if not email or not password or not tipo:
                 return JsonResponse({'error': 'E-mail, senha e tipo sao obrigatorios.'}, status=400)
 
@@ -280,40 +280,40 @@ def login(request):
 def cadastra_avaliacao(request):
     if request.method == 'POST':
         try:
-            # Parseia os dados do corpo da requisição JSON
+            # Parseia os dados do corpo da requisiÃ§Ã£o JSON
             data = json.loads(request.body)
 
-            # Obtém o ID do cliente e do corretor e a avaliação
+            # ObtÃ©m o ID do cliente e do corretor e a avaliaÃ§Ã£o
             cliente_id = data.get('cliente_id')
             corretor_id = data.get('corretor_id')
             avaliacao = data.get('avaliacao')
             comentario = data.get('comentario', '')
 
-            # Valida se os campos obrigatórios estão presentes
+            # Valida se os campos obrigatÃ³rios estÃ£o presentes
             if not all([cliente_id, corretor_id, avaliacao]):
-                return JsonResponse({'error': 'Cliente ID, Corretor ID e avaliacao sao obrigatorios.'}, status=400)
+                return JsonResponse({'error': 'Cliente ID, Corretor ID e avaliaÃ§Ã£o sÃ£o obrigatÃ³rios.'}, status=400)
 
             # Verifica se o cliente e corretor existem
             try:
                 cliente = Cliente.objects.get(id=cliente_id)
                 corretor = Corretor.objects.get(id=corretor_id)
             except Cliente.DoesNotExist:
-                return JsonResponse({'error': 'Cliente nao encontrado.'}, status=404)
+                return JsonResponse({'error': 'Cliente nÃ£o encontrado.'}, status=404)
             except Corretor.DoesNotExist:
-                return JsonResponse({'error': 'Corretor nao encontrado.'}, status=404)
+                return JsonResponse({'error': 'Corretor nÃ£o encontrado.'}, status=404)
 
             # Tenta obter um feedback existente para o cliente e corretor
             feedback, created = FeedbackCliente.objects.update_or_create(
                 cliente=cliente,
                 corretor=corretor,
-                defaults={'avaliacao': avaliacao, 'comentario': comentario}
+                defaults={'avaliacao': avaliacao, 'comentario': comentario, 'data_feedback': timezone.now()}  # Adicionando a data de feedback
             )
 
             # Prepara a mensagem de resposta
             if created:
-                message = 'Avaliacao criada com sucesso!'
+                message = 'AvaliaÃ§Ã£o criada com sucesso!'
             else:
-                message = 'Avaliacao atualizada com sucesso!'
+                message = 'AvaliaÃ§Ã£o atualizada com sucesso!'
 
             return JsonResponse({
                 'message': message,
@@ -323,60 +323,77 @@ def cadastra_avaliacao(request):
                     'corretor': feedback.corretor.nome,
                     'avaliacao': feedback.avaliacao,
                     'comentario': feedback.comentario,
-                    'data_feedback': feedback.data_feedback
+                    'data_feedback': feedback.data_feedback.strftime('%d/%m/%Y')  # Formatando a data
                 }
             }, status=200)
 
         except json.JSONDecodeError:
-            return JsonResponse({'error': 'Dados JSON invalidos.'}, status=400)
+            return JsonResponse({'error': 'Dados JSON invÃ¡lidos.'}, status=400)
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=500)
     else:
-        return JsonResponse({'error': 'Metodo nao permitido. Use POST.'}, status=405)
+        return JsonResponse({'error': 'MÃ©todo nÃ£o permitido. Use POST.'}, status=405)
     
 
 @csrf_exempt
 def ver_avaliacao_corretor(request):
     if request.method == 'POST':
         try:
-            # Parseia o corpo da requisição para obter o ID do corretor
+            # Parseia o corpo da requisiÃ§Ã£o para obter o ID do corretor
             data = json.loads(request.body)
             corretor_id = data.get('id')
 
             # Valida se o ID foi enviado
             if not corretor_id:
-                return JsonResponse({'error': 'O campo "id" do corretor e obrigatorio.'}, status=400)
+                return JsonResponse({'error': 'O campo "id" do corretor Ã© obrigatÃ³rio.'}, status=400)
 
             # Verifica se o corretor existe
             try:
-                Corretor.objects.get(id=corretor_id)
+                corretor = Corretor.objects.get(id=corretor_id)
             except Corretor.DoesNotExist:
-                return JsonResponse({'error': 'Corretor nao encontrado.'}, status=404)
+                return JsonResponse({'error': 'Corretor nÃ£o encontrado.'}, status=404)
 
-            # Calcula a média das avaliações do corretor
+            # Calcula a mÃ©dia das avaliaÃ§Ãµes do corretor
             media = FeedbackCliente.objects.filter(corretor_id=corretor_id).aggregate(media_avaliacao=Avg('avaliacao'))
 
-            # Arredonda a média para 2 casas decimais (ou retorna 0 se for None)
+            # Arredonda a mÃ©dia para 1 casa decimal (ou retorna 0 se for None)
             media_avaliacao = round(media['media_avaliacao'] or 0, 1)
+
+            # ObtÃ©m as avaliaÃ§Ãµes completas, incluindo cliente, data e comentÃ¡rio
+            avaliacoes = FeedbackCliente.objects.filter(corretor_id=corretor_id).values(
+                'cliente__nome', 'comentario', 'data_feedback', 'avaliacao'
+            )
+
+            # Formata as avaliaÃ§Ãµes para serem retornadas
+            avaliacao_list = [
+                {
+                    'cliente': avaliacao['cliente__nome'],
+                    'comentario': avaliacao['comentario'],
+                    'data_feedback': avaliacao['data_feedback'].strftime('%d/%m/%Y'),
+                    'avaliacao': avaliacao['avaliacao']
+                }
+                for avaliacao in avaliacoes
+            ]
 
             return JsonResponse({
                 'corretor_id': corretor_id,
-                'media_avaliacao': media_avaliacao
+                'media_avaliacao': media_avaliacao,
+                'avaliacoes': avaliacao_list
             }, status=200)
 
         except json.JSONDecodeError:
-            return JsonResponse({'error': 'Dados JSON invalidos.'}, status=400)
+            return JsonResponse({'error': 'Dados JSON invÃ¡lidos.'}, status=400)
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=500)
     else:
-        return JsonResponse({'error': 'Metodo nao permitido. Use POST.'}, status=405)
+        return JsonResponse({'error': 'MÃ©todo nÃ£o permitido. Use POST.'}, status=405)
     
 
 @csrf_exempt
 def associar_cliente_a_corretor(request):
     if request.method == 'POST':
         try:
-            # Parseia os dados do corpo da requisição JSON
+            # Parseia os dados do corpo da requisiï¿½ï¿½o JSON
             data = json.loads(request.body)
             cliente_id = data.get('cliente_id')
             corretor_id = data.get('corretor_id')
@@ -390,7 +407,7 @@ def associar_cliente_a_corretor(request):
             cliente = get_object_or_404(Cliente, id=cliente_id)
             corretor = get_object_or_404(Corretor, id=corretor_id)
 
-            # Cria ou atualiza a associação entre cliente e corretor
+            # Cria ou atualiza a associaï¿½ï¿½o entre cliente e corretor
             associacao, created = ClienteCorretor.objects.update_or_create(
                 cliente=cliente,
                 corretor=corretor,
