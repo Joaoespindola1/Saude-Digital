@@ -177,15 +177,18 @@ def buscar_corretores(request):
     if request.method == 'GET':
         try:
             endereco = request.GET.get('endereco', '')
-            plano_nome = request.GET.get('plano_nome', '')
+            plano_nomes = request.GET.get('plano_nome', '')
 
             corretores = Corretor.objects.all()
 
+            # Filtrando por endereço, se fornecido
             if endereco:
                 corretores = corretores.filter(endereco__icontains=endereco)
 
-            if plano_nome:
-                corretores = corretores.filter(corretorplano__plano__nome=plano_nome)
+            # Filtrando por planos, se fornecido
+            if plano_nomes:
+                plano_lista = plano_nomes.split(',')  # Dividindo a string em uma lista
+                corretores = corretores.filter(corretorplano__plano__nome__in=plano_lista)
 
             corretores_list = list(corretores.values('id', 'nome', 'email', 'endereco'))
 
