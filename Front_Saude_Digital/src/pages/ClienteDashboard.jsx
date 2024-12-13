@@ -63,13 +63,13 @@ function ClienteDashboard() {
 
     const fetchPlanos = async () => {
       try {
-        const response = await axios.get('http://127.0.0.1:8000/planos/');
+        const response = await axios.get('http://127.0.0.1:8000/listar_planos/');
         setPlanos(response.data.planos);
       } catch (error) {
         console.error('Erro ao buscar planos de saúde:', error);
       }
     };
-
+    
     fetchCorretores();
     fetchPlanos();
   }, []);
@@ -82,27 +82,42 @@ function ClienteDashboard() {
   };
 
   const handlePlanoChange = (event) => {
-    const planoId = event.target.value;
-    setSelectedPlano(planoId);
-
-    filterCorretores(selectedRegiao, planoId);
+    const planoId = parseInt(event.target.value); // Certifique-se de que é um número válido
+    
+    // Atualiza a lista de planos selecionados
+    const updatedSelectedPlano = selectedPlano.includes(planoId)
+      ? selectedPlano.filter((id) => id !== planoId)
+      : [...selectedPlano, planoId];
+    
+    setSelectedPlano(updatedSelectedPlano);
+  
+    // Filtra os corretores com base na região e nos planos atualizados
+    filterCorretores(selectedRegiao, updatedSelectedPlano);
   };
+  
+  
+  
 
-  const filterCorretores = (regiao, planoId) => {
+  const filterCorretores = (regiao, planosSelecionados) => {
     let filtered = corretores;
-
+  
+    // Filtra por região
     if (regiao) {
       filtered = filtered.filter((corretor) => corretor.endereco === regiao);
     }
-
-    if (planoId) {
-      filtered = filtered.filter((corretor) =>
-        corretor.planos.some((plano) => plano.id === parseInt(planoId))
+  
+    // Filtra por planos de saúde
+    if (planosSelecionados && planosSelecionados.length > 0) {
+      filtered = filtered.filter((corretor) => 
+        Array.isArray(corretor.planos) &&
+        corretor.planos.some((plano) => planosSelecionados.includes(plano.id))
       );
     }
-
+  
     setFilteredCorretores(filtered);
   };
+  
+  
 
   const handleVerPerfil = (id) => {
     navigate(`/corretor-perfil/${id}`);
@@ -119,6 +134,7 @@ function ClienteDashboard() {
       <div className="flex">
         <aside className="w-1/4 bg-white p-4 min-h-screen">
           <h2 className="text-xl font-bold mb-4">Filtros</h2>
+           {/* Filtro de Região */}
           <div className="mb-4">
             <label className="block text-gray-700 mb-2">Região</label>
             <select
@@ -133,6 +149,25 @@ function ClienteDashboard() {
                 </option>
               ))}
             </select>
+          </div>
+
+          {/* Filtro de Planos de Saúde */}
+          <div className="mb-4">
+            <label className="block text-gray-700 mb-2">Planos de Saúde</label>
+            <div>
+              {planos.map((plano) => (
+                <div key={plano.id} className="flex items-center mb-2">
+                  <input
+                    type="checkbox"
+                    value={plano.id}
+                    checked={selectedPlano.includes(plano.id)}
+                    onChange={handlePlanoChange}
+                    className="mr-2"
+                  />
+                  <label>{plano.nome}</label>
+                </div>
+              ))}
+            </div>
           </div>
         </aside>
         <main className="w-3/4 bg-bg_bege p-4">

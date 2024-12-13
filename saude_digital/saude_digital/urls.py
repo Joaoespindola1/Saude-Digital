@@ -16,7 +16,8 @@ urlpatterns = [
     path('cadastra_avaliacao/', views.cadastra_avaliacao, name='cadastra_avaliacao'),
     path('ver_avaliacao_corretor/', views.ver_avaliacao_corretor, name='ver_avaliacao_corretor'),
     path('associar_cliente_a_corretor/', views.associar_cliente_a_corretor, name='associar_cliente_a_corretor'),
-    path('associar_plano_a_corretor/', views.associar_cliente_a_corretor, name='associar_plano_a_corretor'),
+    path('associar_plano_a_corretor/', views.associar_planos_a_corretor, name='associar_plano_a_corretor'),
     path('buscar_corretores/', views.associar_cliente_a_corretor, name='buscar_corretores'),
+    path('listar_planos/', views.listar_planos, name='listar_planos'),
 ]
 

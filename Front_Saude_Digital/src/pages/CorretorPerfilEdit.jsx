@@ -12,9 +12,11 @@ function PerfilCorretorEdit() {
   const navigate = useNavigate();
   const [corretor, setCorretor] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isEditing, setIsEditing] = useState(false); // Controle do modo de edição
-  const [editForm, setEditForm] = useState({}); // Dados do formulário de edição
+  const [isEditing, setIsEditing] = useState(false); 
+  const [editForm, setEditForm] = useState({}); 
   const [avaliacoes, setAvaliacoes] = useState([]);
+  const [planos, setPlanos] = useState([]); 
+  const [selectedPlanos, setSelectedPlanos] = useState([]);
 
 
   useEffect(() => {
@@ -25,17 +27,21 @@ function PerfilCorretorEdit() {
     } else {
       const fetchCorretor = async () => {
         try {
-          const response = await axios.get(
-            `http://127.0.0.1:8000/busca_corretor_id/?id=${userId}`
-          );
-          setCorretor(response.data.corretor);
-          setEditForm(response.data.corretor); // Preenche os campos do formulário
-          setIsLoading(false);
+            const response = await axios.get(
+                `http://127.0.0.1:8000/busca_corretor_id/?id=${userId}`
+            );
+            setCorretor(response.data.corretor);
+            setEditForm(response.data.corretor);
+            // Atualize os planos selecionados com base nos dados do corretor
+            const planosAssociados = response.data.corretor.planos || [];
+            setSelectedPlanos(planosAssociados.map((plano) => String(plano.id))); // Garantir que IDs sejam strings
+            setIsLoading(false);
         } catch (error) {
-          console.error("Erro ao buscar os dados do corretor:", error);
-          setIsLoading(false);
+            console.error("Erro ao buscar os dados do corretor:", error);
+            setIsLoading(false);
         }
-      };
+    };
+    
 
       const fetchAvaliacoes = async () => {
         try {
@@ -46,6 +52,16 @@ function PerfilCorretorEdit() {
         }
       }
 
+      const fetchPlanos = async () => {  
+        try {
+          const response = await axios.get('http://127.0.0.1:8000/listar_planos/');
+          setPlanos(response.data.planos)
+        } catch (error) {
+          console.error('Erro ao buscar planos:', error);
+        }
+      };
+
+      fetchPlanos()
       fetchCorretor();
       fetchAvaliacoes();
     }
@@ -68,23 +84,38 @@ function PerfilCorretorEdit() {
     setEditForm({ ...editForm, [e.target.name]: e.target.value });
   };
 
-  const handleUpdate = async () => {
-    try {
-      const response = await axios.post(
-        "http://127.0.0.1:8000/atualiza_corretor/",
-        {
-          id: corretor.id,
-          ...editForm,
-        }
-      );
-      alert(response.data.message);
-      setCorretor(response.data.corretor);
-      setIsEditing(false);
-    } catch (error) {
-      console.error("Erro ao atualizar os dados do corretor:", error);
-      alert("Erro ao atualizar os dados.");
-    }
+  const handlePlanoChange = (e) => {
+    const selectedValue = String(e.target.value); // Força o valor a ser string.
+    setSelectedPlanos((prevSelectedPlanos) => {
+      if (prevSelectedPlanos.includes(selectedValue)) {
+        return prevSelectedPlanos.filter((planoId) => planoId !== selectedValue);
+      } else {
+        return [...prevSelectedPlanos, selectedValue];
+      }
+    });
   };
+  
+  
+
+  const handleUpdate = async () => {
+    console.log("Planos selecionados:", selectedPlanos); // Debug
+    try {
+        const response = await axios.post(
+            "http://127.0.0.1:8000/atualiza_corretor/",
+            {
+                id: corretor.id,
+                ...editForm,
+                planos: selectedPlanos, 
+            }
+        );
+        alert(response.data.message);
+        setCorretor(response.data.corretor);
+        setIsEditing(false);
+    } catch (error) {
+        console.error("Erro ao atualizar os dados do corretor:", error);
+        alert("Erro ao atualizar os dados.");
+    }
+};
 
   const handleGoToHome = () => {
     navigate('/corretor-dashboard');
@@ -155,6 +186,25 @@ function PerfilCorretorEdit() {
                   rows="4"
                 />
               </div>
+              <div className="space-y-4">
+                <label className="block font-bold">Planos de Saúde:</label>
+                <div className="space-y-2">
+                  {planos.map((plano) => (
+                    <div key={plano.id} className="flex items-center">
+                      <input
+                        type="checkbox"
+                        name="planos"
+                        value={String(plano.id)}  // Garantir que o valor seja string
+                        checked={selectedPlanos.includes(String(plano.id))}// Garantir que a comparação de tipo seja correta
+                        onChange={handlePlanoChange}
+                        className="mr-2"
+                      />
+                      <label>{plano.nome}</label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
               <div className="flex justify-end space-x-4 mt-4">
                 <button
                   onClick={() => setIsEditing(false)}

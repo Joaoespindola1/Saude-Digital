@@ -69,7 +69,7 @@ class FeedbackCliente(models.Model):
 class Plano(models.Model):
     nome = models.CharField(max_length=255)
     descricao = models.TextField(blank=True, null=True)
-    preco_mensal = models.DecimalField(max_digits=10, decimal_places=2)
+    preco_mensal = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
 
 
     def __str__(self):

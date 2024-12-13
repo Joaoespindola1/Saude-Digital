@@ -3,7 +3,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render, get_object_or_404
 from django.utils import timezone
-from .models import Cliente, Corretor, FeedbackCliente, ClienteCorretor
+from .models import Cliente, Corretor, FeedbackCliente, ClienteCorretor, Plano, CorretorPlano
 import json
 
 def home(request):
@@ -119,14 +119,30 @@ def ver_clientes(request):
 
 def ver_corretores(request):
     if request.method == 'GET':
-        # Obtem todos os objetos do modelo Cliente
-        corretores = list(Corretor.objects.values())  # Converte para uma lista de dicionarios
+        # Obtem todos os corretores
+        corretores = Corretor.objects.all()
+
+        # Converte os dados para uma lista de dicionários
+        corretores_data = []
+        for corretor in corretores:
+            # Busca os planos associados a cada corretor usando o relacionamento
+            planos_associados = Plano.objects.filter(corretorplano__corretor=corretor)
+
+            # Adiciona os dados do corretor e seus planos à lista
+            corretores_data.append({
+                'id': corretor.id,
+                'nome': corretor.nome,
+                'endereco': corretor.endereco,
+                'telefone': corretor.telefone,
+                'email': corretor.email,
+                'planos': [{'id': plano.id, 'nome': plano.nome} for plano in planos_associados]  # Inclui os planos associados
+            })
 
         # Retorna a resposta JSON
-        return JsonResponse({'corretores': corretores}, safe=False)
+        return JsonResponse({'corretores': corretores_data}, safe=False)
     else:
-        # Retorna erro caso nao seja uma requisicao GET
         return JsonResponse({'error': 'Metodo nao permitido. Use GET.'}, status=405)
+
 
 
 def busca_corretor(request):
@@ -149,13 +165,16 @@ def busca_corretor_id(request):
     if request.method == 'GET':
         # Obtem o id da requisicao
         id = request.GET.get('id', '')
+
         # Busca o corretor pelo ID
         corretor = get_object_or_404(Corretor, id=id)
 
-        # Converte o objeto do corretor para dicion�rio
+        # Busca os planos associados ao corretor
+        planos_associados = Plano.objects.filter(corretorplano__corretor=corretor)
+
+        # Converte o objeto do corretor para dicionário
         corretor_data = {
             'id': corretor.id,
-            #'foto_perfil': corretor.foto_perfil,
             'nome': corretor.nome,
             'cpf': corretor.cpf,
             'endereco': corretor.endereco,
@@ -163,7 +182,9 @@ def busca_corretor_id(request):
             'email': corretor.email,
             'codigo_corretor': corretor.codigo_corretor,
             'descricao': corretor.descricao,
-            'clientes_vinculados': corretor.clientes_vinculados
+            'clientes_vinculados': corretor.clientes_vinculados,
+            # Adiciona os planos associados
+            'planos': [{'id': plano.id, 'nome': plano.nome, 'descricao': plano.descricao, 'preco_mensal': plano.preco_mensal} for plano in planos_associados]
         }
 
         # Retorna a resposta JSON
@@ -181,7 +202,7 @@ def buscar_corretores(request):
 
             corretores = Corretor.objects.all()
 
-            # Filtrando por endere�o, se fornecido
+            # Filtrando por endere�o, se fornecido
             if endereco:
                 corretores = corretores.filter(endereco__icontains=endereco)
 
@@ -205,18 +226,18 @@ def buscar_corretores(request):
 def atualiza_corretor(request):
     if request.method == 'POST':
         try:
-            # Parseia os dados do corpo da requisi��o JSON
+            # Parseia os dados do corpo da requisição JSON
             data = json.loads(request.body)
 
-            # Obt�m o ID do corretor a partir dos dados JSON
+            # Obtém o ID do corretor a partir dos dados JSON
             id = data.get('id')
             if not id:
-                return JsonResponse({'error': 'ID do corretor e obrigatorio.'}, status=400)
+                return JsonResponse({'error': 'ID do corretor é obrigatório.'}, status=400)
 
-            # Obt�m o corretor pelo ID, retornando um 404 se n�o encontrado
+            # Obtém o corretor pelo ID, retornando um 404 se não encontrado
             corretor = get_object_or_404(Corretor, id=id)
 
-            # Atualiza os campos permitidos, mantendo os valores atuais se n�o forem enviados
+            # Atualiza os campos permitidos, mantendo os valores atuais se não forem enviados
             corretor.nome = data.get('nome', corretor.nome)
             corretor.cpf = data.get('cpf', corretor.cpf)
             corretor.endereco = data.get('endereco', corretor.endereco)
@@ -226,10 +247,21 @@ def atualiza_corretor(request):
             corretor.password = data.get('password', corretor.password)
             corretor.descricao = data.get('descricao', corretor.descricao)
 
-            # Salva as altera��es no banco de dados
+            # Salva as alterações no banco de dados
             corretor.save()
 
-            # Retorna o corretor atualizado como JSON
+            # Atualiza a relação de planos
+            planos_ids = data.get('planos', [])  # Recebe a lista de IDs de planos
+            if planos_ids:
+                # Remove associações antigas
+                CorretorPlano.objects.filter(corretor=corretor).delete()
+                # Cria novas associações
+                CorretorPlano.objects.bulk_create([
+                    CorretorPlano(corretor=corretor, plano_id=plano_id)
+                    for plano_id in planos_ids
+                ])
+
+            # Retorna o corretor atualizado como JSON, incluindo os planos associados
             return JsonResponse({
                 'message': 'Corretor atualizado com sucesso!',
                 'corretor': {
@@ -241,15 +273,19 @@ def atualiza_corretor(request):
                     'email': corretor.email,
                     'codigo_corretor': corretor.codigo_corretor,
                     'descricao': corretor.descricao,
+                    'planos': [
+                        {'id': plano.plano.id, 'nome': plano.plano.nome}
+                        for plano in CorretorPlano.objects.filter(corretor=corretor)
+                    ]
                 }
             }, status=200)
 
         except json.JSONDecodeError:
-            return JsonResponse({'error': 'Dados JSON invalidos.'}, status=400)
+            return JsonResponse({'error': 'Dados JSON inválidos.'}, status=400)
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=500)
     else:
-        return JsonResponse({'error': 'Metodo nao permitido. Use POST.'}, status=405)
+        return JsonResponse({'error': 'Método não permitido. Use POST.'}, status=405)
 
 
 def busca_endereco(request):
@@ -472,43 +508,67 @@ def associar_cliente_a_corretor(request):
 
 
 @csrf_exempt
-def associar_plano_a_corretor(request):
+def associar_planos_a_corretor(request):
     if request.method == 'POST':
         try:
+            # Carregar o JSON enviado na requisição
             data = json.loads(request.body)
+            
+            # Capturar o ID do corretor e a lista de IDs de planos
             corretor_id = data.get('corretor_id')
-            plano_id = data.get('plano_id')
+            plano_ids = data.get('planos', [])  # Agora espera uma lista de IDs de planos
 
-            if not corretor_id or not plano_id:
-                return JsonResponse({'error': 'Corretor ID e Plano ID sao obrigatorios.'}, status=400)
+            # Validação: garantir que os campos necessários estão presentes
+            if not corretor_id or not isinstance(plano_ids, list) or not plano_ids:
+                return JsonResponse({'error': 'Corretor ID e uma lista de Planos sao obrigatorios.'}, status=400)
 
+            # Obter o corretor
             corretor = get_object_or_404(Corretor, id=corretor_id)
-            plano = get_object_or_404(Plano, id=plano_id)
 
-            ligacao, created = CorretorPlano.objects.update_or_create(
-                corretor=corretor,
-                plano=plano,
-                defaults={
-                    'data_inicio': now().date()
-                }
-            )
+            # Obter todos os planos correspondentes aos IDs recebidos
+            planos = Plano.objects.filter(id__in=plano_ids)
 
-            message = 'Plano associado ao corretor com sucesso!' if created else 'Associacao atualizada com sucesso!'
+            if not planos.exists():
+                return JsonResponse({'error': 'Nenhum plano valido encontrado.'}, status=400)
+
+            # Remover todas as associações anteriores (se necessário)
+            CorretorPlano.objects.filter(corretor=corretor).exclude(plano__in=planos).delete()
+
+            # Associar os planos ao corretor
+            associacoes_criadas = []
+            for plano in planos:
+                ligacao, created = CorretorPlano.objects.get_or_create(
+                    corretor=corretor,
+                    plano=plano
+                )
+                associacoes_criadas.append({
+                    'plano': plano.nome,
+                    'criado': created
+                })
 
             return JsonResponse({
-                'message': message,
-                'associacao': {
-                    'corretor': corretor.nome,
-                    'plano': plano.nome,
-                    'data_inicio': ligacao.data_inicio
-                }
+                'message': 'Planos associados ao corretor com sucesso!',
+                'associacoes': associacoes_criadas
             }, status=200)
 
         except json.JSONDecodeError:
             return JsonResponse({'error': 'Dados JSON invalidos.'}, status=400)
         except Exception as e:
-            return JsonResponse({'error': str(e)}, status=500)
+            return JsonResponse({'error': f'Erro interno: {str(e)}'}, status=500)
 
     else:
         return JsonResponse({'error': 'Metodo nao permitido. Use POST.'}, status=405)
     
+def listar_planos(request):
+    try:
+        # Recuperar todos os planos do banco
+        planos = Plano.objects.all()
+        
+        if planos.exists():
+            planos_list = [{'id': plano.id, 'nome': plano.nome} for plano in planos]
+            return JsonResponse({'planos': planos_list}, status=200)
+        else:
+            return JsonResponse({'message': 'Nenhum plano encontrado.'}, status=404)
+
+    except Exception as e:
+        return JsonResponse({'error': f'Erro interno: {str(e)}'}, status=500)
