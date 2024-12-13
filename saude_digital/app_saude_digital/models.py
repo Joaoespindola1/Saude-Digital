@@ -66,9 +66,22 @@ class FeedbackCliente(models.Model):
     def __str__(self):
         return f"Feedback de {self.cliente.nome} para {self.corretor.nome}"
         
-class PlanoDeSaude(models.Model):
-    plano_especialidade = models.CharField(max_length=100)
-    corretor = models.ForeignKey(Corretor, on_delete=models.CASCADE, related_name='planos')
+class Plano(models.Model):
+    nome = models.CharField(max_length=255)
+    descricao = models.TextField(blank=True, null=True)
+    preco_mensal = models.DecimalField(max_digits=10, decimal_places=2)
+
 
     def __str__(self):
-        return f"{self.plano_especialidade} - {self.corretor.nome}"
+        return self.nome
+
+
+class CorretorPlano(models.Model):
+    corretor = models.ForeignKey(Corretor, on_delete=models.CASCADE)
+    plano = models.ForeignKey(Plano, on_delete=models.CASCADE)
+
+    class Meta:
+        unique_together = ('corretor', 'plano')
+
+    def __str__(self):
+        return f"{self.corretor.nome} - {self.plano.nome}"

@@ -173,6 +173,32 @@ def busca_corretor_id(request):
 
 
 @csrf_exempt
+def buscar_corretores(request):
+    if request.method == 'GET':
+        try:
+            endereco = request.GET.get('endereco', '')
+            plano_nome = request.GET.get('plano_nome', '')
+
+            corretores = Corretor.objects.all()
+
+            if endereco:
+                corretores = corretores.filter(endereco__icontains=endereco)
+
+            if plano_nome:
+                corretores = corretores.filter(corretorplano__plano__nome=plano_nome)
+
+            corretores_list = list(corretores.values('id', 'nome', 'email', 'endereco'))
+
+            return JsonResponse({'corretores': corretores_list}, safe=False)
+
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+
+    else:
+        return JsonResponse({'error': 'Metodo nao permitido. Use GET.'}, status=405)
+
+
+@csrf_exempt
 def atualiza_corretor(request):
     if request.method == 'POST':
         try:
@@ -430,6 +456,48 @@ def associar_cliente_a_corretor(request):
                     'corretor': corretor.nome,
                     'data_associacao': associacao.data_associacao,
                     'status_associacao': associacao.status_associacao
+                }
+            }, status=200)
+
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Dados JSON invalidos.'}, status=400)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+
+    else:
+        return JsonResponse({'error': 'Metodo nao permitido. Use POST.'}, status=405)
+
+
+@csrf_exempt
+def associar_plano_a_corretor(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            corretor_id = data.get('corretor_id')
+            plano_id = data.get('plano_id')
+
+            if not corretor_id or not plano_id:
+                return JsonResponse({'error': 'Corretor ID e Plano ID sao obrigatorios.'}, status=400)
+
+            corretor = get_object_or_404(Corretor, id=corretor_id)
+            plano = get_object_or_404(Plano, id=plano_id)
+
+            ligacao, created = CorretorPlano.objects.update_or_create(
+                corretor=corretor,
+                plano=plano,
+                defaults={
+                    'data_inicio': now().date()
+                }
+            )
+
+            message = 'Plano associado ao corretor com sucesso!' if created else 'Associacao atualizada com sucesso!'
+
+            return JsonResponse({
+                'message': message,
+                'associacao': {
+                    'corretor': corretor.nome,
+                    'plano': plano.nome,
+                    'data_inicio': ligacao.data_inicio
                 }
             }, status=200)
 
