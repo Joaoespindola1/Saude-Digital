@@ -19,7 +19,7 @@ function Chat() {
   };
 
   return (
-    <div className="fixed bottom-4 right-4">
+    <div className="fixed bottom-4 right-4 hidden">
       {/* Botão de Abrir Chat */}
       {!isOpen && (
         <button

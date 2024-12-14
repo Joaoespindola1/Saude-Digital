@@ -13,7 +13,8 @@ function ClienteDashboard() {
   const [regioes, setRegioes] = useState([]);
   const [selectedRegiao, setSelectedRegiao] = useState('');
   const [planos, setPlanos] = useState([]);
-  const [selectedPlano, setSelectedPlano] = useState('');
+  const [selectedPlano, setSelectedPlano] = useState([]);
+  const [sortOrder, setSortOrder] = useState('desc'); // Ordenação padrão: decrescente
 
   useEffect(() => {
     const userId = localStorage.getItem("userId");
@@ -27,7 +28,7 @@ function ClienteDashboard() {
       try {
         const response = await axios.get('http://127.0.0.1:8000/corretores/');
         const corretoresData = response.data.corretores;
-
+  
         const corretoresComAvaliacao = await Promise.all(
           corretoresData.map(async (corretor) => {
             try {
@@ -48,11 +49,14 @@ function ClienteDashboard() {
             }
           })
         );
-
+  
+        // Ordena os corretores por avaliação em ordem decrescente ao carregar
+        corretoresComAvaliacao.sort((a, b) => b.media_avaliacao - a.media_avaliacao);
+  
         const uniqueRegioes = [
           ...new Set(corretoresComAvaliacao.map((corretor) => corretor.endereco)),
         ];
-
+  
         setCorretores(corretoresComAvaliacao);
         setFilteredCorretores(corretoresComAvaliacao);
         setRegioes(uniqueRegioes);
@@ -60,7 +64,7 @@ function ClienteDashboard() {
         console.error('Erro ao buscar corretores:', error);
       }
     };
-
+  
     const fetchPlanos = async () => {
       try {
         const response = await axios.get('http://127.0.0.1:8000/listar_planos/');
@@ -69,55 +73,60 @@ function ClienteDashboard() {
         console.error('Erro ao buscar planos de saúde:', error);
       }
     };
-    
+  
     fetchCorretores();
     fetchPlanos();
   }, []);
+  
 
   const handleRegiaoChange = (event) => {
     const regiao = event.target.value;
     setSelectedRegiao(regiao);
 
-    filterCorretores(regiao, selectedPlano);
+    filterCorretores(regiao, selectedPlano, sortOrder);
   };
 
   const handlePlanoChange = (event) => {
-    const planoId = parseInt(event.target.value); // Certifique-se de que é um número válido
-    
-    // Atualiza a lista de planos selecionados
+    const planoId = parseInt(event.target.value);
     const updatedSelectedPlano = selectedPlano.includes(planoId)
       ? selectedPlano.filter((id) => id !== planoId)
       : [...selectedPlano, planoId];
-    
-    setSelectedPlano(updatedSelectedPlano);
-  
-    // Filtra os corretores com base na região e nos planos atualizados
-    filterCorretores(selectedRegiao, updatedSelectedPlano);
-  };
-  
-  
-  
 
-  const filterCorretores = (regiao, planosSelecionados) => {
+    setSelectedPlano(updatedSelectedPlano);
+
+    filterCorretores(selectedRegiao, updatedSelectedPlano, sortOrder);
+  };
+
+  const handleSortOrderChange = (event) => {
+    const order = event.target.value;
+    setSortOrder(order);
+
+    filterCorretores(selectedRegiao, selectedPlano, order);
+  };
+
+  const filterCorretores = (regiao, planosSelecionados, order) => {
     let filtered = corretores;
-  
-    // Filtra por região
+
     if (regiao) {
       filtered = filtered.filter((corretor) => corretor.endereco === regiao);
     }
-  
-    // Filtra por planos de saúde
+
     if (planosSelecionados && planosSelecionados.length > 0) {
-      filtered = filtered.filter((corretor) => 
+      filtered = filtered.filter((corretor) =>
         Array.isArray(corretor.planos) &&
         corretor.planos.some((plano) => planosSelecionados.includes(plano.id))
       );
     }
-  
+
+    // Ordena com base na avaliação
+    if (order === 'asc') {
+      filtered.sort((a, b) => a.media_avaliacao - b.media_avaliacao);
+    } else {
+      filtered.sort((a, b) => b.media_avaliacao - a.media_avaliacao);
+    }
+
     setFilteredCorretores(filtered);
   };
-  
-  
 
   const handleVerPerfil = (id) => {
     navigate(`/corretor-perfil/${id}`);
@@ -134,7 +143,17 @@ function ClienteDashboard() {
       <div className="flex">
         <aside className="w-1/4 bg-white p-4 min-h-screen">
           <h2 className="text-xl font-bold mb-4">Filtros</h2>
-           {/* Filtro de Região */}
+          <div className="mb-4">
+            <label className="block text-gray-700 mb-2">Ordenar por Avaliação</label>
+            <select
+              className="border rounded-md p-2 w-full"
+              value={sortOrder}
+              onChange={handleSortOrderChange}
+            >
+              <option value="desc">Decrescente</option>
+              <option value="asc">Crescente</option>
+            </select>
+          </div>
           <div className="mb-4">
             <label className="block text-gray-700 mb-2">Região</label>
             <select
@@ -151,7 +170,6 @@ function ClienteDashboard() {
             </select>
           </div>
 
-          {/* Filtro de Planos de Saúde */}
           <div className="mb-4">
             <label className="block text-gray-700 mb-2">Planos de Saúde</label>
             <div>
